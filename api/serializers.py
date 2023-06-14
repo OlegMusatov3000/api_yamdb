@@ -4,7 +4,7 @@ from reviews.models import Comment, Review
 
 
 class ReviewSerializer(serializers.ModelSerializer):
-    '''Сериализатор модели Review.'''
+    """Сериализатор модели Review."""
     title = serializers.SlugRelatedField(
         read_only=True,
         slug_field='name',
@@ -32,7 +32,7 @@ class ReviewSerializer(serializers.ModelSerializer):
 
 
 class CommentSerializer(serializers.ModelSerializer):
-    '''Сериализатор модели Comment.'''
+    """Сериализатор модели Comment."""
     review = serializers.SlugRelatedField(
         read_only=True,
         slug_field='text',
