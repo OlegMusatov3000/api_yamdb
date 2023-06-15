@@ -3,6 +3,7 @@ from django.db import models
 
 
 class User(AbstractUser):
+    """Класс пользователей."""
     bio = models.TextField(
         'Биография',
         blank=True,
@@ -15,4 +16,5 @@ class User(AbstractUser):
             ('moderator', 'модератор'),
             ('admin', 'администратор')
         ),
+        default='user'
     )
