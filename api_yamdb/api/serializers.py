@@ -29,10 +29,15 @@ class SingUpSerializer(serializers.ModelSerializer):
 class TokenSerializer(serializers.Serializer):
     """Сериализатор для объекта класса User при получении токена JWT."""
 
-    username = serializers.CharField(
+    username = serializers.RegexField(
+        regex=r'^[\w.@+-]+$',
         max_length=150,
+        required=True
     )
-    confirmation_code = serializers.CharField()
+    confirmation_code = serializers.CharField(
+        max_length=150,
+        required=True
+    )
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -43,3 +48,10 @@ class UserSerializer(serializers.ModelSerializer):
             'username', 'email', 'first_name', 'last_name', 'bio', 'role'
         )
         model = User
+
+    def validate_username(self, username):
+        if username in 'me':
+            raise serializers.ValidationError(
+                'Использовать имя me запрещено'
+            )
+        return username
