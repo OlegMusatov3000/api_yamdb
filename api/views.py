@@ -1,10 +1,18 @@
-from django.shortcuts import get_object_or_404, render
+from django.shortcuts import get_object_or_404
 from rest_framework import viewsets
 from rest_framework.permissions import IsAuthenticatedOrReadOnly
 
 from reviews.models import Review, Title
 
-from .serializers import CommentSerializer, ReviewSerializer
+from .serializers import (CommentSerializer, ReadOnlyTitleSerializer,
+                          ReviewSerializer, TitleSerializer)
+
+
+class TitleViewSet(viewsets.ModelViewSet):
+    def get_serializer_class(self):
+        if self.action in ("retrieve", "list"):
+            return ReadOnlyTitleSerializer
+        return TitleSerializer
 
 
 class ReviewViewSet(viewsets.ModelViewSet):

@@ -1,6 +1,19 @@
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
-from reviews.models import Comment, Review
+
+from reviews.models import Comment, Review, Title
+
+
+class GenreSerializer(serializers.ModelSerializer):
+    pass
+
+
+class CategorySerializer(serializers.ModelSerializer):
+    pass
+
+
+class TitleSerializer(serializers.ModelSerializer):
+    pass
 
 
 class ReviewSerializer(serializers.ModelSerializer):
@@ -46,3 +59,17 @@ class CommentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Comment
         fields = ('id', 'text', 'author', 'pub_date',)
+
+
+class ReadOnlyTitleSerializer(serializers.ModelSerializer):
+    rating = serializers.IntegerField(
+        source='reviews__score__avg', read_only=True
+    )
+    genre = GenreSerializer(many=True)
+    category = CategorySerializer()
+
+    class Meta:
+        model = Title
+        fields = (
+            'id', 'name', 'year', 'rating', 'description', 'genre', 'category'
+        )
