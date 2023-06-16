@@ -6,37 +6,33 @@ from django.db import models
 class User(AbstractUser):
     """Класс пользователей."""
     username = models.CharField(
+        'Имя пользователя',
         max_length=150,
-        verbose_name='Имя пользователя',
-        unique=True,
         db_index=True,
+        unique=True,
         validators=[RegexValidator(
             regex=r'^[\w.@+-]+$',
-            message='Имя пользователя содержит недопустимый символ'
+            message='Неправильное имя пользователя!'
         )]
     )
     email = models.EmailField(
+        'почта',
         max_length=254,
-        verbose_name='email',
         unique=True
     )
     first_name = models.CharField(
+        'имя',
         max_length=150,
-        verbose_name='имя',
         blank=True
     )
     last_name = models.CharField(
+        'фамилия',
         max_length=150,
-        verbose_name='фамилия',
         blank=True
     )
     bio = models.TextField(
-        verbose_name='биография',
+        'биография',
         blank=True
-    )
-    bio = models.TextField(
-        'Биография',
-        blank=True,
     )
     role = models.TextField(
         'Пользовательская роль',

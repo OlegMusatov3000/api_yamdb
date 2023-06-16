@@ -8,34 +8,41 @@ from rest_framework.permissions import (
 from rest_framework_simplejwt.tokens import AccessToken
 from rest_framework.response import Response
 from rest_framework.decorators import action
+from rest_framework.filters import SearchFilter
 
 from reviews.models import User
-from .serializers import SingUpSerializer, TokenSerializer, UserSerializer
+from .serializers import SignUpSerializer, TokenSerializer, UserSerializer
 from .permissions import (
     IsAdminOrSuperUserDjango,
     IsSuperUserOrAdminOrModeratorOrAuthorOrReadOnly
 )
 
 
-class SingUpViewSet(mixins.CreateModelMixin, viewsets.GenericViewSet):
+class SignUpViewSet(mixins.CreateModelMixin, viewsets.GenericViewSet):
     """Создание обьектов класса User и отправка кода подтвердения."""
     queryset = User.objects.all()
-    serializer_class = SingUpSerializer
+    serializer_class = SignUpSerializer
     permission_classes = (AllowAny,)
 
     def create(self, request):
-        serializer = SingUpSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        user = User.objects.create(**request.data)
+        serializer = SignUpSerializer(data=request.data)
+        if (
+            not serializer.is_valid()
+            and not User.objects.filter(**serializer.data)
+        ):
+            return Response(
+                serializer.errors, status=status.HTTP_400_BAD_REQUEST
+            )
+        user, x = User.objects.get_or_create(**serializer.data)
         confirmation_code = default_token_generator.make_token(user)
         send_mail(
             subject='Код подтверждения',
-            message=f'Ваш код подтверждения: {confirmation_code}',
+            message=f'ваш "confirmation_code": {confirmation_code}',
             from_email='zbls@pzdc.ru',
             recipient_list=(user.email,),
             fail_silently=False,
         )
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 class TokenViewSet(mixins.CreateModelMixin, viewsets.GenericViewSet):
@@ -58,14 +65,38 @@ class TokenViewSet(mixins.CreateModelMixin, viewsets.GenericViewSet):
 
 
 class UserViewSet(
-    mixins.CreateModelMixin,
     mixins.ListModelMixin,
+    mixins.CreateModelMixin,
     viewsets.GenericViewSet
 ):
     """Вьюсет для юзеров."""
     queryset = User.objects.all()
     permission_classes = (IsAdminOrSuperUserDjango,)
     serializer_class = UserSerializer
+    lookup_field = 'username'
+    filter_backends = (SearchFilter,)
+    search_fields = ('username',)
+
+    @action(
+        detail=False,
+        methods=['get', 'patch', 'delete'],
+        url_path=r'(?P<username>[\w.@+-]+)',
+        url_name='get_user'
+    )
+    def get_user_by_username(self, request, username):
+        """Обеспечивает получание данных пользователя по его username и
+        управление ими."""
+        user = get_object_or_404(User, username=username)
+        if request.method == 'PATCH':
+            serializer = UserSerializer(user, data=request.data, partial=True)
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        elif request.method == 'DELETE':
+            user.delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        serializer = UserSerializer(user)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
     @action(
         detail=False,
@@ -83,27 +114,7 @@ class UserViewSet(
                 partial=True,
             )
             serializer.is_valid(raise_exception=True)
-            serializer.save()
+            serializer.save(role=request.user.role)
             return Response(serializer.data, status=status.HTTP_200_OK)
         serializer = UserSerializer(request.user)
-        return Response(serializer.data, status=status.HTTP_200_OK)
-
-    @action(
-        detail=False,
-        methods=['get', 'patch', 'delete'],
-        url_path=r'(?P<username>[\w.@+-]+)',
-        url_name='username'
-    )
-    def detail_user(self, request, username):
-        """Работа с конкретным пользователем."""
-        user = get_object_or_404(User, username=username)
-        if request.method == 'PATCH':
-            serializer = UserSerializer(user, data=request.data, partial=True)
-            serializer.is_valid(raise_exception=True)
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_200_OK)
-        elif request.method == 'DELETE':
-            user.delete()
-            return Response(status=status.HTTP_204_NO_CONTENT)
-        serializer = UserSerializer(user)
         return Response(serializer.data, status=status.HTTP_200_OK)
