@@ -9,6 +9,7 @@ from .serializers import (CommentSerializer, ReadOnlyTitleSerializer,
 
 
 class TitleViewSet(viewsets.ModelViewSet):
+    """Переопределение сериализатора для методов чтения."""
     def get_serializer_class(self):
         if self.action in ("retrieve", "list"):
             return ReadOnlyTitleSerializer

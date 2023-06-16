@@ -62,6 +62,7 @@ class CommentSerializer(serializers.ModelSerializer):
 
 
 class ReadOnlyTitleSerializer(serializers.ModelSerializer):
+    """Сериализатор модели Title, с выдачей рейтинга произведения."""
     rating = serializers.IntegerField(
         source='reviews__score__avg', read_only=True
     )
