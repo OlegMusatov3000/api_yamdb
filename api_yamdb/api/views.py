@@ -1,7 +1,8 @@
 from django.core.mail import send_mail
 from django.contrib.auth.tokens import default_token_generator
 from django.shortcuts import get_object_or_404
-from rest_framework import viewsets, mixins, status
+from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework import viewsets, mixins, status, filters
 from rest_framework.permissions import (
     IsAuthenticated, AllowAny
 )
@@ -10,12 +11,34 @@ from rest_framework.response import Response
 from rest_framework.decorators import action
 from rest_framework.filters import SearchFilter
 
-from reviews.models import User
-from .serializers import SignUpSerializer, TokenSerializer, UserSerializer
+from reviews.models import (
+    User,
+    Titles,
+    Categories,
+    Genres,
+)
+from .serializers import (
+    SignUpSerializer,
+    TokenSerializer,
+    UserSerializer,
+    TitleSerializer,
+    CategorySerializer,
+    GenreSerializer,
+)
 from .permissions import (
     IsAdminOrSuperUserDjango,
     IsSuperUserOrAdminOrModeratorOrAuthorOrReadOnly
 )
+
+
+class CreateDestroyViewSet(
+    mixins.CreateModelMixin,
+    mixins.DestroyModelMixin,
+    mixins.ListModelMixin,
+    viewsets.GenericViewSet
+):
+    filter_backends = [filters.SearchFilter]
+    search_fields = ('name',)
 
 
 class SignUpViewSet(mixins.CreateModelMixin, viewsets.GenericViewSet):
@@ -118,3 +141,33 @@ class UserViewSet(
             return Response(serializer.data, status=status.HTTP_200_OK)
         serializer = UserSerializer(request.user)
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+class CategoryViewSet(CreateDestroyViewSet):
+    """Категорий сет, фильтрация вынесена в CreateDestroyViewSet."""
+    queryset = Categories.objects.all()
+    serializer_class = CategorySerializer
+
+
+class GenreViewSet(CreateDestroyViewSet):
+    """Жанр сет, фильтрация вынесена в CreateDestroyViewSet."""
+    queryset = Genres.objects.all()
+    serializer_class = GenreSerializer
+
+
+class TitleViewSet(viewsets.ModelViewSet):
+    """Тайтлвью сет фильтрация, создание и обновление."""
+    queryset = Titles.objects.all()
+    serializer_class = TitleSerializer
+    filter_backends = [DjangoFilterBackend]
+    filter_fields = ('name', 'category__slug', 'genre__slug', 'year',)
+
+    def perform_create(self, serializer):
+        return serializer.save(
+            category=get_object_or_404(self.request.data.get('category')),
+            genre=get_object_or_404(self.request.data.get('genre')))
+
+    def perform_update(self, serializer):
+        return serializer.save(
+            category=get_object_or_404(self.request.data.get('category')),
+            genre=get_object_or_404(self.request.data.get('genre')))
