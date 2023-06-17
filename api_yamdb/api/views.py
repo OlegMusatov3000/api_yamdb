@@ -4,7 +4,9 @@ from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import viewsets, mixins, status, filters
 from rest_framework.permissions import (
-    IsAuthenticated, AllowAny
+    IsAuthenticated,
+    AllowAny,
+    IsAuthenticatedOrReadOnly
 )
 from rest_framework_simplejwt.tokens import AccessToken
 from rest_framework.response import Response
@@ -13,6 +15,7 @@ from rest_framework.filters import SearchFilter
 
 from reviews.models import (
     User,
+    Review,
     Titles,
     Categories,
     Genres,
@@ -24,6 +27,10 @@ from .serializers import (
     TitleSerializer,
     CategorySerializer,
     GenreSerializer,
+    CommentSerializer,
+    ReadOnlyTitleSerializer,
+    ReviewSerializer,
+    TitleSerializer,
 )
 from .permissions import (
     IsAdminOrSuperUserDjango,
@@ -171,3 +178,50 @@ class TitleViewSet(viewsets.ModelViewSet):
         return serializer.save(
             category=get_object_or_404(self.request.data.get('category')),
             genre=get_object_or_404(self.request.data.get('genre')))
+
+
+class TitleViewSet(viewsets.ModelViewSet):
+    def get_serializer_class(self):
+        if self.action in ("retrieve", "list"):
+            return ReadOnlyTitleSerializer
+        return TitleSerializer
+
+
+class ReviewViewSet(viewsets.ModelViewSet):
+    """Вьюсет работы с отзывами."""
+    serializer_class = ReviewSerializer
+    # Пока не настроены точные пермишены, оставлю этот пермишн.
+    permission_classes = (IsAuthenticatedOrReadOnly, )
+
+    def get_title(self):
+        """Метод получения произведения, для которого пишется отзыв."""
+        return get_object_or_404(Titles, id=self.kwargs.get('title_id'))
+
+    def get_queryset(self):
+        """Метод получения списка отзывов."""
+        return self.get_title().reviews.all()
+
+    def perform_create(self, serializer):
+        """Метод создания отзыва, с текущим пользователем в поел author."""
+        serializer.save(title=self.get_title(), author=self.request.user)
+
+
+class CommentViewSet(viewsets.ModelViewSet):
+    """Вьюсет работы с комментариями."""
+    serializer_class = CommentSerializer
+    permission_classes = (IsAuthenticatedOrReadOnly, )
+
+    def get_review(self):
+        """Метод получения отзыва, к которому пишется комментарий."""
+        return get_object_or_404(
+            Review,
+            id=self.kwargs.get('review_id'),
+            title=self.kwargs.get('title_id')
+        )
+
+    def get_queryset(self):
+        """Метод получения списка комментариев."""
+        return self.get_review().comments.all()
+
+    def perform_create(self, serializer):
+        serializer.save(review=self.get_review(), author=self.request.user)

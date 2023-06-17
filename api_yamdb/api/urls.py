@@ -3,12 +3,15 @@ from rest_framework.routers import DefaultRouter
 
 
 from .views import (
-  SignUpViewSet,
-  TokenViewSet,
-  UserViewSet,
-  TitleViewSet,
-  CategoryViewSet,
-  GenreViewSet
+    SignUpViewSet,
+    TokenViewSet,
+    UserViewSet,
+    TitleViewSet,
+    CategoryViewSet,
+    GenreViewSet,
+    CommentViewSet,
+    ReviewViewSet,
+)
 
 
 app_name = 'api'
@@ -22,6 +25,16 @@ router.register(
 router.register(
     'genres', GenreViewSet, basename='genres')
 router.register('users', UserViewSet, basename='users')
+router.register(
+    r'titles/(?P<title_id>\d+)/reviews',
+    ReviewViewSet,
+    basename='reviews'
+)
+router.register(
+    r'titles/(?P<title_id>\d+)/reviews/(?P<review_id>\d+)/comments',
+    CommentViewSet,
+    basename='comments'
+)
 
 urlpatterns = [
     path('auth/signup/', SignUpViewSet.as_view(
