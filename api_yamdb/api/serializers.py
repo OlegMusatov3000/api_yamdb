@@ -75,10 +75,15 @@ class GenreSerializer(serializers.ModelSerializer):
 
 class TitleSerializer(serializers.ModelSerializer):
     """Тайтл сериализатор."""
-    category = SlugRelatedField(slug_field='slug',
-                                read_only=True)
-    genre = SlugRelatedField(slug_field='slug',
-                             read_only=True)
+    category = serializers.SlugRelatedField(
+        slug_field='slug',
+        queryset=Categories.objects.all(),
+    )
+    genre = serializers.SlugRelatedField(
+        slug_field='slug',
+        many=True,
+        queryset=Genres.objects.all(),
+    )
 
     class Meta:
         fields = '__all__'
@@ -110,7 +115,7 @@ class ReviewSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Review
-        fields = ('id', 'text', 'author', 'score', 'pub_date',)
+        fields = '__all__'
 
 
 class CommentSerializer(serializers.ModelSerializer):
@@ -127,7 +132,7 @@ class CommentSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Comment
-        fields = ('id', 'text', 'author', 'pub_date',)
+        fields = '__all__'
 
 
 class ReadOnlyTitleSerializer(serializers.ModelSerializer):

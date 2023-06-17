@@ -169,18 +169,6 @@ class TitleViewSet(viewsets.ModelViewSet):
     filter_backends = [DjangoFilterBackend]
     filter_fields = ('name', 'category__slug', 'genre__slug', 'year',)
 
-    def perform_create(self, serializer):
-        return serializer.save(
-            category=get_object_or_404(self.request.data.get('category')),
-            genre=get_object_or_404(self.request.data.get('genre')))
-
-    def perform_update(self, serializer):
-        return serializer.save(
-            category=get_object_or_404(self.request.data.get('category')),
-            genre=get_object_or_404(self.request.data.get('genre')))
-
-
-class TitleViewSet(viewsets.ModelViewSet):
     def get_serializer_class(self):
         if self.action in ("retrieve", "list"):
             return ReadOnlyTitleSerializer
