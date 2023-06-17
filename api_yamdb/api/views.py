@@ -34,7 +34,8 @@ from .serializers import (
 )
 from .permissions import (
     IsAdminOrSuperUserDjango,
-    IsSuperUserOrAdminOrModeratorOrAuthorOrReadOnly
+    IsSuperUserOrAdminOrModeratorOrAuthorOrReadOnly,
+    IsAdminModeratorOwnerOrReadOnly
 )
 
 
@@ -178,8 +179,7 @@ class TitleViewSet(viewsets.ModelViewSet):
 class ReviewViewSet(viewsets.ModelViewSet):
     """Вьюсет работы с отзывами."""
     serializer_class = ReviewSerializer
-    # Пока не настроены точные пермишены, оставлю этот пермишн.
-    permission_classes = (IsAuthenticatedOrReadOnly, )
+    permission_classes = (IsAdminModeratorOwnerOrReadOnly, )
 
     def get_title(self):
         """Метод получения произведения, для которого пишется отзыв."""
@@ -197,7 +197,7 @@ class ReviewViewSet(viewsets.ModelViewSet):
 class CommentViewSet(viewsets.ModelViewSet):
     """Вьюсет работы с комментариями."""
     serializer_class = CommentSerializer
-    permission_classes = (IsAuthenticatedOrReadOnly, )
+    permission_classes = (IsAdminModeratorOwnerOrReadOnly, )
 
     def get_review(self):
         """Метод получения отзыва, к которому пишется комментарий."""

@@ -73,6 +73,8 @@ class GenreSerializer(serializers.ModelSerializer):
         model = Genres
 
 
+# Внёс сюда правки. Добавил queryset и сделал наследование SlugRelatedField
+# напрямую от serializers, а не от rest_framework.relations
 class TitleSerializer(serializers.ModelSerializer):
     """Тайтл сериализатор."""
     category = serializers.SlugRelatedField(
@@ -136,6 +138,7 @@ class CommentSerializer(serializers.ModelSerializer):
 
 
 class ReadOnlyTitleSerializer(serializers.ModelSerializer):
+    """Сериализатор для Title только для чтения, с отображением рейтинга."""
     rating = serializers.IntegerField(
         source='reviews__score__avg', read_only=True
     )
