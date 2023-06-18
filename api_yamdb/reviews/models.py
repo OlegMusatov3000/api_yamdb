@@ -51,17 +51,19 @@ class User(AbstractUser):
     )
 
 
-class Categories(models.Model):
+class Category(models.Model):
     """Модель категорий."""
     name = models.CharField(max_length=256)
-    slug = models.SlugField(max_length=50,
-                            unique=True)
+    slug = models.SlugField(
+        max_length=50,
+        unique=True,)
+
 
     def __str__(self):
         return self.name
 
 
-class Genres(models.Model):
+class Genre(models.Model):
     """Модель жанров."""
     name = models.CharField(max_length=256)
     slug = models.SlugField(
@@ -73,7 +75,7 @@ class Genres(models.Model):
         return self.name
 
 
-class Titles(models.Model):
+class Title(models.Model):
     """Модель произведений, с ограничением по году выхода."""
     name = models.CharField(max_length=256)
     year = models.IntegerField(
@@ -81,15 +83,17 @@ class Titles(models.Model):
         validators=[MaxValueValidator(dt.date.today().year)]
     )
     description = models.TextField(verbose_name='Описание')
-    genre = models.ManyToManyField(Genres,
-                                   related_name='titles',
-                                   verbose_name='Жанры')
-    category = models.ForeignKey(Categories,
-                                 on_delete=models.SET_NULL,
-                                 related_name='titles',
-                                 verbose_name='Категории',
-                                 null=True,
-                                 blank=True)
+    genre = models.ManyToManyField(
+        Genre,
+        related_name='titles',
+        verbose_name='Жанры')
+    category = models.ForeignKey(
+        Category,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='titles',
+        verbose_name='Категории',)
 
     def __str__(self):
         return self.name
@@ -97,7 +101,7 @@ class Titles(models.Model):
 
 class Review(models.Model):
     title = models.ForeignKey(
-        Titles,
+        Title,
         verbose_name='Произведение',
         on_delete=models.CASCADE,
         related_name='reviews',
