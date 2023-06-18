@@ -1,40 +1,30 @@
-from django.core.mail import send_mail
 from django.contrib.auth.tokens import default_token_generator
+from django.core.mail import send_mail
+from django.db.models import Avg
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import viewsets, mixins, status, filters
-from rest_framework.permissions import (
-    IsAuthenticated,
-    AllowAny,
-    IsAuthenticatedOrReadOnly
-)
-from rest_framework_simplejwt.tokens import AccessToken
-from rest_framework.response import Response
+from rest_framework import filters, mixins, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.filters import SearchFilter
+from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.response import Response
+from rest_framework_simplejwt.tokens import AccessToken
+from reviews.models import Categories, Genres, Review, Titles, User
 
-from reviews.models import (
-    User,
-    Review,
-    Titles,
-    Categories,
-    Genres,
+from .permissions import (
+    IsAdminModeratorOwnerOrReadOnly,
+    IsAdminOrSuperUserDjango
 )
 from .serializers import (
-    SignUpSerializer,
-    TokenSerializer,
-    UserSerializer,
-    TitleSerializer,
     CategorySerializer,
-    GenreSerializer,
     CommentSerializer,
+    GenreSerializer,
     ReadOnlyTitleSerializer,
     ReviewSerializer,
+    SignUpSerializer,
     TitleSerializer,
-)
-from .permissions import (
-    IsAdminOrSuperUserDjango,
-    IsSuperUserOrAdminOrModeratorOrAuthorOrReadOnly
+    TokenSerializer,
+    UserSerializer
 )
 
 
@@ -164,23 +154,14 @@ class GenreViewSet(CreateDestroyViewSet):
 
 class TitleViewSet(viewsets.ModelViewSet):
     """Тайтлвью сет фильтрация, создание и обновление."""
-    queryset = Titles.objects.all()
+    # Добавил anotate для подсчета рейтинга.
+    queryset = Titles.objects.all().annotate(
+        Avg("reviews__score")
+    )
     serializer_class = TitleSerializer
     filter_backends = [DjangoFilterBackend]
     filter_fields = ('name', 'category__slug', 'genre__slug', 'year',)
 
-    def perform_create(self, serializer):
-        return serializer.save(
-            category=get_object_or_404(self.request.data.get('category')),
-            genre=get_object_or_404(self.request.data.get('genre')))
-
-    def perform_update(self, serializer):
-        return serializer.save(
-            category=get_object_or_404(self.request.data.get('category')),
-            genre=get_object_or_404(self.request.data.get('genre')))
-
-
-class TitleViewSet(viewsets.ModelViewSet):
     def get_serializer_class(self):
         if self.action in ("retrieve", "list"):
             return ReadOnlyTitleSerializer
@@ -190,8 +171,7 @@ class TitleViewSet(viewsets.ModelViewSet):
 class ReviewViewSet(viewsets.ModelViewSet):
     """Вьюсет работы с отзывами."""
     serializer_class = ReviewSerializer
-    # Пока не настроены точные пермишены, оставлю этот пермишн.
-    permission_classes = (IsAuthenticatedOrReadOnly, )
+    permission_classes = (IsAdminModeratorOwnerOrReadOnly, )
 
     def get_title(self):
         """Метод получения произведения, для которого пишется отзыв."""
@@ -209,7 +189,7 @@ class ReviewViewSet(viewsets.ModelViewSet):
 class CommentViewSet(viewsets.ModelViewSet):
     """Вьюсет работы с комментариями."""
     serializer_class = CommentSerializer
-    permission_classes = (IsAuthenticatedOrReadOnly, )
+    permission_classes = (IsAdminModeratorOwnerOrReadOnly, )
 
     def get_review(self):
         """Метод получения отзыва, к которому пишется комментарий."""
