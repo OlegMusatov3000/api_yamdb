@@ -1,41 +1,30 @@
-from django.core.mail import send_mail
 from django.contrib.auth.tokens import default_token_generator
+from django.core.mail import send_mail
+from django.db.models import Avg
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import viewsets, mixins, status, filters
-from rest_framework.permissions import (
-    IsAuthenticated,
-    AllowAny,
-    IsAuthenticatedOrReadOnly
-)
-from rest_framework_simplejwt.tokens import AccessToken
-from rest_framework.response import Response
+from rest_framework import filters, mixins, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.filters import SearchFilter
+from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.response import Response
+from rest_framework_simplejwt.tokens import AccessToken
+from reviews.models import Categories, Genres, Review, Titles, User
 
-from reviews.models import (
-    User,
-    Review,
-    Titles,
-    Categories,
-    Genres,
+from .permissions import (
+    IsAdminModeratorOwnerOrReadOnly,
+    IsAdminOrSuperUserDjango
 )
 from .serializers import (
-    SignUpSerializer,
-    TokenSerializer,
-    UserSerializer,
-    TitleSerializer,
     CategorySerializer,
-    GenreSerializer,
     CommentSerializer,
+    GenreSerializer,
     ReadOnlyTitleSerializer,
     ReviewSerializer,
+    SignUpSerializer,
     TitleSerializer,
-)
-from .permissions import (
-    IsAdminOrSuperUserDjango,
-    IsSuperUserOrAdminOrModeratorOrAuthorOrReadOnly,
-    IsAdminModeratorOwnerOrReadOnly
+    TokenSerializer,
+    UserSerializer
 )
 
 
@@ -165,7 +154,10 @@ class GenreViewSet(CreateDestroyViewSet):
 
 class TitleViewSet(viewsets.ModelViewSet):
     """Тайтлвью сет фильтрация, создание и обновление."""
-    queryset = Titles.objects.all()
+    # Добавил anotate для подсчета рейтинга.
+    queryset = Titles.objects.all().annotate(
+        Avg("reviews__score")
+    )
     serializer_class = TitleSerializer
     filter_backends = [DjangoFilterBackend]
     filter_fields = ('name', 'category__slug', 'genre__slug', 'year',)
