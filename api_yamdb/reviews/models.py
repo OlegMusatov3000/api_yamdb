@@ -7,6 +7,8 @@ from django.core.validators import (
 from django.db import models
 import datetime as dt
 
+from django.db.models.fields import related
+
 
 class User(AbstractUser):
     """Класс пользователей."""
@@ -56,8 +58,10 @@ class Category(models.Model):
     name = models.CharField(max_length=256)
     slug = models.SlugField(
         max_length=50,
-        unique=True,)
+        unique=True, )
 
+    class Meta:
+        ordering = ['id']
 
     def __str__(self):
         return self.name
@@ -70,6 +74,9 @@ class Genre(models.Model):
         max_length=50,
         unique=True
     )
+
+    class Meta:
+        ordering = ['id']
 
     def __str__(self):
         return self.name
@@ -86,14 +93,18 @@ class Title(models.Model):
     genre = models.ManyToManyField(
         Genre,
         related_name='titles',
-        verbose_name='Жанры')
+        verbose_name='Жанры'
+    )
     category = models.ForeignKey(
         Category,
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
         related_name='titles',
-        verbose_name='Категории',)
+        verbose_name='Категории', )
+
+    class Meta:
+        ordering = ['id']
 
     def __str__(self):
         return self.name
