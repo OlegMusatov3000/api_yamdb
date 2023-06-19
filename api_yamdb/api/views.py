@@ -3,7 +3,7 @@ from django.db.models import Avg
 from django.contrib.auth.tokens import default_token_generator
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import viewsets, mixins, status, filters
+from rest_framework import viewsets, mixins, status
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import (
     IsAuthenticated,
@@ -29,12 +29,13 @@ from api.serializers import (
     CategorySerializer,
     GenreSerializer,
     CommentSerializer,
-    TitleSerializerReadOnly,
     ReviewSerializer,
+    TitleSerializerReadOnly
 )
 from api.permissions import (
     IsAdminOrSuperUserDjango,
-    IsAdminOrReadOnly,
+    IsAdmin,
+    IsReadOnly,
     IsAdminModeratorOwnerOrReadOnly,
 )
 from api.filters import TitleFilter
@@ -46,7 +47,8 @@ class CreateDestroyViewSet(
     mixins.ListModelMixin,
     viewsets.GenericViewSet
 ):
-    filter_backends = [filters.SearchFilter]
+    filter_backends = (SearchFilter,)
+    pagination_class = PageNumberPagination
     search_fields = ('name',)
     lookup_field = 'slug'
 
@@ -60,8 +62,8 @@ class SignUpViewSet(mixins.CreateModelMixin, viewsets.GenericViewSet):
     def create(self, request):
         serializer = SignUpSerializer(data=request.data)
         if (
-            not serializer.is_valid()
-            and not User.objects.filter(**serializer.data)
+                not serializer.is_valid()
+                and not User.objects.filter(**serializer.data)
         ):
             return Response(
                 serializer.errors, status=status.HTTP_400_BAD_REQUEST
@@ -157,25 +159,24 @@ class CategoryViewSet(CreateDestroyViewSet):
     """Категорий сет, фильтрация вынесена в CreateDestroyViewSet."""
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
-    permission_classes = [IsAdminOrReadOnly]
+    permission_classes = [IsAdmin | IsReadOnly]
 
 
 class GenreViewSet(CreateDestroyViewSet):
     """Жанр сет, фильтрация вынесена в CreateDestroyViewSet."""
     queryset = Genre.objects.all()
     serializer_class = GenreSerializer
-    permission_classes = [IsAdminOrReadOnly]
+    permission_classes = [IsAdmin | IsReadOnly]
 
 
 class TitleViewSet(viewsets.ModelViewSet):
     """Тайтлвью сет фильтрация, создание и обновление."""
-    queryset = Title.objects.all().annotate(rating=Avg('reviews__score'))
+    queryset = Title.objects.annotate(rating=Avg('reviews__score'))
     serializer_class = TitleSerializer
     pagination_class = PageNumberPagination
-    filter_backends = [DjangoFilterBackend, SearchFilter]
-    filter_fields = ['name', 'year', 'genre', 'category']
+    filter_backends = [DjangoFilterBackend]
     filter_class = TitleFilter
-    permission_classes = [IsAdminOrReadOnly]
+    permission_classes = [IsAdmin | IsReadOnly]
 
     def get_serializer_class(self):
         if self.action in ('create', 'partial_update'):
@@ -204,7 +205,7 @@ class ReviewViewSet(viewsets.ModelViewSet):
 class CommentViewSet(viewsets.ModelViewSet):
     """Вьюсет работы с комментариями."""
     serializer_class = CommentSerializer
-    permission_classes = (IsAdminModeratorOwnerOrReadOnly, )
+    permission_classes = (IsAdminModeratorOwnerOrReadOnly,)
 
     def get_review(self):
         """Метод получения отзыва, к которому пишется комментарий."""
