@@ -9,10 +9,11 @@ class IsAdminOrSuperUserDjango(BasePermission):
 
     def has_permission(self, request, view):
         return (
-            request.user.is_authenticated and (
+                request.user.is_authenticated and (
                 request.user.is_staff
                 or request.user.role == 'admin'
-            ))
+                or request.user.is_superuser
+        ))
 
 
 class IsSuperUserOrAdminOrModeratorOrAuthorOrReadOnly(BasePermission):
@@ -20,13 +21,13 @@ class IsSuperUserOrAdminOrModeratorOrAuthorOrReadOnly(BasePermission):
 
     def has_object_permission(self, request, view, obj):
         return (
-            request.method in SAFE_METHODS
-            or request.user.is_authenticated and (
-                request.user.is_staff
-                or request.user.role == 'admin'
-                or request.user.role == 'moderator'
-                or request.user == obj.author
-            ))
+                request.method in SAFE_METHODS
+                or request.user.is_authenticated and (
+                        request.user.is_staff
+                        or request.user.role == 'admin'
+                        or request.user.role == 'moderator'
+                        or request.user == obj.author
+                ))
 
 
 class IsAdminModeratorOwnerOrReadOnly(BasePermission):
@@ -41,13 +42,14 @@ class IsAdminModeratorOwnerOrReadOnly(BasePermission):
                 or request.user.is_authenticated)
 
 
-class IsAdminOrReadOnly(BasePermission):
+class IsAdmin(BasePermission):
     """Права для Администратора и Суперпользователя Django"""
     message = MESSAGE
 
     def has_permission(self, request, view):
-        return (request.method in SAFE_METHODS or
-                request.user.is_authenticated and (
-                    request.user.role == 'admin' or
-                    request.user.is_staff
-                ))
+        return request.user.is_authenticated and request.user.role == 'admin'
+
+
+class IsReadOnly(BasePermission):
+    def has_permission(self, request, view):
+        return request.method in SAFE_METHODS
