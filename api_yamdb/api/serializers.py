@@ -14,7 +14,7 @@ class SignUpSerializer(serializers.ModelSerializer):
     """Создает нового пользователя при регистрации."""
 
     class Meta:
-        fields = ('email', 'username')
+        fields = ('email', 'username',)
         model = User
 
     def validate(self, data):
@@ -44,7 +44,7 @@ class UserSerializer(serializers.ModelSerializer):
 
     class Meta:
         fields = (
-            'username', 'email', 'first_name', 'last_name', 'bio', 'role'
+            'username', 'email', 'first_name', 'last_name', 'bio', 'role',
         )
         model = User
 
@@ -61,16 +61,13 @@ class CategorySerializer(serializers.ModelSerializer):
 
     class Meta:
         fields = ('name', 'slug',)
-        lookup_field = 'slug'
+        lookup_fields = ('slug',)
         model = Category
 
 
 class GenreSerializer(serializers.ModelSerializer):
-    """Сериализатор жанров."""
-
     class Meta:
-        fields = ('name', 'slug',)
-        lookup_field = 'slug'
+        fields = ('name', 'slug')
         model = Genre
 
 
@@ -78,11 +75,36 @@ class TitleSerializer(serializers.ModelSerializer):
     """Тайтл сериализатор."""
     category = serializers.SlugRelatedField(
         slug_field='slug',
-        queryset=Category.objects.all(), )
+        queryset=Category.objects.all())
     genre = serializers.SlugRelatedField(
         slug_field='slug',
         many=True,
-        queryset=Genre.objects.all(), )
+        queryset=Genre.objects.all())
+
+    def create(self, validated_data):
+        """Создания жанра категории."""
+        genre_data = self.context['request'].data.get('genre', [])
+        category_data = self.context['request'].data.get('category')
+        genres = Genre.objects.filter(slug__in=genre_data)
+        category = Category.objects.get(slug=category_data)
+        validated_data['category'] = category
+        validated_data.pop('genre', None)
+        title = Title.objects.create(**validated_data)
+        title.genre.set(genres)
+        return title
+
+    def update(self, instance, validated_data):
+        """Изменения жанров категорий."""
+        genre_data = self.context['request'].data.get('genre', [])
+        category_data = self.context['request'].data.get('category')
+        genres = Genre.objects.filter(slug__in=genre_data)
+        category = Category.objects.get(slug=category_data)
+        validated_data['category'] = category
+        if 'genre' in validated_data:
+            validated_data.pop('genre')
+        instance = super().update(instance, validated_data)
+        instance.genre.set(genres)
+        return instance
 
     class Meta:
         fields = '__all__'
@@ -90,7 +112,7 @@ class TitleSerializer(serializers.ModelSerializer):
 
 
 class TitleSerializerReadOnly(serializers.ModelSerializer):
-    """Тайтл сериализатор."""
+    """Тайтл сериализатор для рид онли запросов."""
     category = CategorySerializer(read_only=True)
     genre = GenreSerializer(read_only=True, many=True)
     rating = serializers.IntegerField()
