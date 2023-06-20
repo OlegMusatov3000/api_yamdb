@@ -81,31 +81,6 @@ class TitleSerializer(serializers.ModelSerializer):
         many=True,
         queryset=Genre.objects.all())
 
-    def create(self, validated_data):
-        """Создания жанра категории."""
-        genre_data = self.context['request'].data.get('genre', [])
-        category_data = self.context['request'].data.get('category')
-        genres = Genre.objects.filter(slug__in=genre_data)
-        category = Category.objects.get(slug=category_data)
-        validated_data['category'] = category
-        validated_data.pop('genre', None)
-        title = Title.objects.create(**validated_data)
-        title.genre.set(genres)
-        return title
-
-    def update(self, instance, validated_data):
-        """Изменения жанров категорий."""
-        genre_data = self.context['request'].data.get('genre', [])
-        category_data = self.context['request'].data.get('category')
-        genres = Genre.objects.filter(slug__in=genre_data)
-        category = Category.objects.get(slug=category_data)
-        validated_data['category'] = category
-        if 'genre' in validated_data:
-            validated_data.pop('genre')
-        instance = super().update(instance, validated_data)
-        instance.genre.set(genres)
-        return instance
-
     class Meta:
         fields = '__all__'
         model = Title

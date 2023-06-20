@@ -175,7 +175,7 @@ class TitleViewSet(viewsets.ModelViewSet):
     serializer_class = TitleSerializer
     pagination_class = PageNumberPagination
     filter_backends = [DjangoFilterBackend]
-    filter_class = TitleFilter
+    filterset_class = TitleFilter
     permission_classes = [IsAdmin | IsReadOnly]
 
     def get_serializer_class(self):

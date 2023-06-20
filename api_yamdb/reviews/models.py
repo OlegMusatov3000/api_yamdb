@@ -7,8 +7,6 @@ from django.core.validators import (
 from django.db import models
 import datetime as dt
 
-from django.db.models.fields import related
-
 
 class User(AbstractUser):
     """Класс пользователей."""
@@ -92,8 +90,10 @@ class Title(models.Model):
     description = models.TextField(verbose_name='Описание')
     genre = models.ManyToManyField(
         Genre,
+        through='GenreTitle',
         related_name='titles',
         verbose_name='Жанры'
+
     )
     category = models.ForeignKey(
         Category,
@@ -108,6 +108,21 @@ class Title(models.Model):
 
     def __str__(self):
         return self.name
+
+
+class GenreTitle(models.Model):
+    """Класс связывающий жанры и произведения."""
+
+    genre = models.ForeignKey(
+        Genre,
+        on_delete=models.CASCADE,
+        verbose_name='Жанр'
+    )
+    title = models.ForeignKey(
+        Title,
+        on_delete=models.CASCADE,
+        verbose_name='произведение'
+    )
 
 
 class Review(models.Model):
