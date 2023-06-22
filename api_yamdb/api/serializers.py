@@ -21,7 +21,7 @@ class SignUpSerializer(serializers.ModelSerializer):
         model = User
 
     def validate(self, data):
-        """Запрещает использовать имена из списка запрещенных username"""
+        """Запрещает использовать имена из списка запрещенных username."""
         if data.get('username') in BLACK_LIST_USERNAMES:
             raise serializers.ValidationError(
                 'использование такого имени недопустимо'
@@ -53,9 +53,10 @@ class UserSerializer(serializers.ModelSerializer):
         model = User
 
     def validate_username(self, username):
-        if username in 'me':
+        """Запрещает использовать имена из списка запрещенных username."""
+        if username in BLACK_LIST_USERNAMES:
             raise serializers.ValidationError(
-                'Использовать имя me запрещено'
+                'использование такого имени недопустимо'
             )
         return username
 
