@@ -1,5 +1,7 @@
 from rest_framework.permissions import BasePermission, SAFE_METHODS
 
+from reviews.models import User
+
 
 MESSAGE = 'Доступ запрещен'
 
@@ -12,22 +14,8 @@ class IsAdminOrSuperUserDjango(BasePermission):
         return (
             request.user.is_authenticated and (
                 request.user.is_staff
-                or request.user.role == 'admin'
+                or request.user.role == User.UsersRole.ADMIN
                 or request.user.is_superuser
-            ))
-
-
-class IsSuperUserOrAdminOrModeratorOrAuthorOrReadOnly(BasePermission):
-    message = MESSAGE
-
-    def has_object_permission(self, request, view, obj):
-        return (
-            request.method in SAFE_METHODS
-            or request.user.is_authenticated and (
-                request.user.is_staff
-                or request.user.role == 'admin'
-                or request.user.role == 'moderator'
-                or request.user == obj.author
             ))
 
 
@@ -36,8 +24,8 @@ class IsAdminModeratorOwnerOrReadOnly(BasePermission):
 
     def has_object_permission(self, request, view, obj):
         return (request.method in SAFE_METHODS
-                or request.user.role == 'admin'
-                or request.user.role == 'moderator'
+                or request.user.role == User.UsersRole.ADMIN
+                or request.user.role == User.UsersRole.MODERATOR
                 or obj.author == request.user)
 
     def has_permission(self, request, view):
@@ -50,7 +38,10 @@ class IsAdmin(BasePermission):
     message = MESSAGE
 
     def has_permission(self, request, view):
-        return request.user.is_authenticated and request.user.role == 'admin'
+        return (
+            request.user.is_authenticated
+            and request.user.role == User.UsersRole.ADMIN
+        )
 
 
 class IsReadOnly(BasePermission):

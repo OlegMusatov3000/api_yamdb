@@ -10,6 +10,9 @@ from reviews.models import (
 )
 
 
+BLACK_LIST_USERNAMES = ('me',)
+
+
 class SignUpSerializer(serializers.ModelSerializer):
     """Создает нового пользователя при регистрации."""
 
@@ -18,9 +21,10 @@ class SignUpSerializer(serializers.ModelSerializer):
         model = User
 
     def validate(self, data):
-        if data.get('username') == 'me':
+        """Запрещает использовать имена из списка запрещенных username"""
+        if data.get('username') in BLACK_LIST_USERNAMES:
             raise serializers.ValidationError(
-                'Использовать имя me запрещено'
+                'использование такого имени недопустимо'
             )
         return data
 

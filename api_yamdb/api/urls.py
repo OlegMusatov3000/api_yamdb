@@ -36,10 +36,14 @@ router.register(
     basename='comments'
 )
 
-urlpatterns = [
-    path('auth/signup/', SignUpViewSet.as_view(
+auth_urls = [
+    path('signup/', SignUpViewSet.as_view(
         {'post': 'create'}), name='singup'),
-    path('auth/token/', TokenViewSet.as_view(
+    path('token/', TokenViewSet.as_view(
         {'post': 'create'}), name='token'),
+]
+
+urlpatterns = [
+    path('auth/', include(auth_urls)),
     path('', include(router.urls)),
 ]

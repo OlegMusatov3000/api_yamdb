@@ -14,6 +14,7 @@ from rest_framework.response import Response
 from rest_framework.decorators import action
 from rest_framework.filters import SearchFilter
 
+from api_yamdb.settings import EMAIL_API
 from reviews.models import (
     User,
     Review,
@@ -68,12 +69,12 @@ class SignUpViewSet(mixins.CreateModelMixin, viewsets.GenericViewSet):
             return Response(
                 serializer.errors, status=status.HTTP_400_BAD_REQUEST
             )
-        user, x = User.objects.get_or_create(**serializer.data)
+        user, _ = User.objects.get_or_create(**serializer.data)
         confirmation_code = default_token_generator.make_token(user)
         send_mail(
             subject='Код подтверждения',
             message=f'ваш "confirmation_code": {confirmation_code}',
-            from_email='zbls@pzdc.ru',
+            from_email=EMAIL_API,
             recipient_list=(user.email,),
             fail_silently=False,
         )
