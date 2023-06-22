@@ -1,3 +1,4 @@
+from django.utils.translation import gettext_lazy as _
 from django.contrib.auth.models import AbstractUser
 from django.core.validators import (
     RegexValidator,
@@ -10,6 +11,11 @@ import datetime as dt
 
 class User(AbstractUser):
     """Класс пользователей."""
+    class UsersRole(models.TextChoices):
+        USER = 'user', _('Пользователь')
+        MODERATOR = 'moderator', _('Модератор')
+        ADMIN = 'admin', _('Админ')
+
     username = models.CharField(
         'Имя пользователя',
         max_length=150,
@@ -42,12 +48,8 @@ class User(AbstractUser):
     role = models.TextField(
         'Пользовательская роль',
         blank=True,
-        choices=(
-            ('user', 'пользователь'),
-            ('moderator', 'модератор'),
-            ('admin', 'администратор')
-        ),
-        default='user'
+        choices=UsersRole.choices,
+        default=UsersRole.USER
     )
 
 
