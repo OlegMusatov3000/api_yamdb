@@ -1,3 +1,4 @@
+import datetime as dt
 from django.utils.translation import gettext_lazy as _
 from django.contrib.auth.models import AbstractUser
 from django.core.validators import (
@@ -6,12 +7,12 @@ from django.core.validators import (
     MinValueValidator,
 )
 from django.db import models
-import datetime as dt
 
 
 class User(AbstractUser):
     """Класс пользователей."""
     class UsersRole(models.TextChoices):
+        ANON = 'anonymous', _('анон')
         USER = 'user', _('Пользователь')
         MODERATOR = 'moderator', _('Модератор')
         ADMIN = 'admin', _('Админ')
