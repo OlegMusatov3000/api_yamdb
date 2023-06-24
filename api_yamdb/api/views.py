@@ -4,7 +4,6 @@ from django.contrib.auth.tokens import default_token_generator
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import viewsets, mixins, status
-from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import (
     IsAuthenticated,
     AllowAny,
@@ -40,18 +39,7 @@ from api.permissions import (
     IsAdminModeratorOwnerOrReadOnly,
 )
 from api.filters import TitleFilter
-
-
-class CreateDestroyViewSet(
-    mixins.CreateModelMixin,
-    mixins.DestroyModelMixin,
-    mixins.ListModelMixin,
-    viewsets.GenericViewSet
-):
-    filter_backends = (SearchFilter,)
-    pagination_class = PageNumberPagination
-    search_fields = ('name',)
-    lookup_field = 'slug'
+from api.mixins import CreateDestroyViewSet, TitleViewSet
 
 
 class SignUpViewSet(mixins.CreateModelMixin, viewsets.GenericViewSet):
@@ -170,11 +158,10 @@ class GenreViewSet(CreateDestroyViewSet):
     permission_classes = [IsAdmin | IsReadOnly]
 
 
-class TitleViewSet(viewsets.ModelViewSet):
+class TitleViewSet(TitleViewSet):
     """Тайтлвью сет фильтрация, создание и обновление."""
     queryset = Title.objects.annotate(rating=Avg('reviews__score'))
     serializer_class = TitleSerializer
-    pagination_class = PageNumberPagination
     filter_backends = [DjangoFilterBackend]
     filterset_class = TitleFilter
     permission_classes = [IsAdmin | IsReadOnly]
