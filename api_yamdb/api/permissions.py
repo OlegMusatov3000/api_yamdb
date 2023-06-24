@@ -3,13 +3,13 @@ from rest_framework.permissions import BasePermission, SAFE_METHODS
 from reviews.models import User
 
 
-MESSAGE = 'Доступ запрещен'
+class YamDBPermission(BasePermission):
+    """Пермишен для реализации повторяющейся логики"""
+    message = 'Доступ запрещен'
 
 
-class IsAdminOrSuperUserDjango(BasePermission):
-    """Права для Администратора и Суперпользователя Django"""
-    message = MESSAGE
-
+class IsAdminOrSuperUserDjango(YamDBPermission):
+    """Права для Администратора и Суперпользователя Django."""
     def has_permission(self, request, view):
         return (
             request.user.is_authenticated and (
@@ -19,9 +19,8 @@ class IsAdminOrSuperUserDjango(BasePermission):
             ))
 
 
-class IsAdminModeratorOwnerOrReadOnly(BasePermission):
-    message = MESSAGE
-
+class IsAdminModeratorOwnerOrReadOnly(YamDBPermission):
+    """Права для админа, модератора, хозяина объекта или для чтения."""
     def has_object_permission(self, request, view, obj):
         return (request.method in SAFE_METHODS
                 or request.user.role == User.UsersRole.ADMIN
@@ -33,10 +32,8 @@ class IsAdminModeratorOwnerOrReadOnly(BasePermission):
                 or request.user.is_authenticated)
 
 
-class IsAdmin(BasePermission):
+class IsAdmin(YamDBPermission):
     """Права для Администратора и Суперпользователя Django"""
-    message = MESSAGE
-
     def has_permission(self, request, view):
         return (
             request.user.is_authenticated
@@ -44,8 +41,7 @@ class IsAdmin(BasePermission):
         )
 
 
-class IsReadOnly(BasePermission):
-    message = MESSAGE
-
+class IsReadOnly(YamDBPermission):
+    """Только для чтения."""
     def has_permission(self, request, view):
         return request.method in SAFE_METHODS
