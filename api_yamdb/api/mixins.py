@@ -26,3 +26,14 @@ class TitleViewSet(
     GenericViewSet
 ):
     pagination_class = PageNumberPagination
+
+
+class ReviewCommentViewSet(
+    mixins.CreateModelMixin,
+    mixins.RetrieveModelMixin,
+    mixins.DestroyModelMixin,
+    mixins.ListModelMixin,
+    mixins.UpdateModelMixin,
+    GenericViewSet
+):
+    pass

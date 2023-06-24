@@ -39,7 +39,7 @@ from api.permissions import (
     IsAdminModeratorOwnerOrReadOnly,
 )
 from api.filters import TitleFilter
-from api.mixins import CreateDestroyViewSet, TitleViewSet
+from api.mixins import CreateDestroyViewSet, TitleViewSet, ReviewCommentViewSet
 
 
 class SignUpViewSet(mixins.CreateModelMixin, viewsets.GenericViewSet):
@@ -172,7 +172,7 @@ class TitleViewSet(TitleViewSet):
         return TitleSerializerReadOnly
 
 
-class ReviewViewSet(viewsets.ModelViewSet):
+class CustomReviewViewSet(ReviewCommentViewSet):
     """Вьюсет работы с отзывами."""
     serializer_class = ReviewSerializer
     permission_classes = (IsAdminModeratorOwnerOrReadOnly,)
@@ -190,7 +190,7 @@ class ReviewViewSet(viewsets.ModelViewSet):
         serializer.save(title=self.get_title(), author=self.request.user)
 
 
-class CommentViewSet(viewsets.ModelViewSet):
+class CustomCommentViewSet(ReviewCommentViewSet):
     """Вьюсет работы с комментариями."""
     serializer_class = CommentSerializer
     permission_classes = (IsAdminModeratorOwnerOrReadOnly,)

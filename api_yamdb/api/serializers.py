@@ -112,15 +112,14 @@ class TitleSerializerReadOnly(serializers.ModelSerializer):
 
 class ReviewSerializer(serializers.ModelSerializer):
     """Сериализатор модели Review."""
-    title = serializers.SlugRelatedField(
+    title = TitleSerializer(read_only=True)
+    author = serializers.SerializerMethodField(
         read_only=True,
-        slug_field='name',
-    )
-    author = serializers.SlugRelatedField(
-        read_only=True,
-        slug_field='username',
         default=serializers.CurrentUserDefault()
     )
+
+    def get_author(self, obj):
+        return obj.author.username
 
     def validate(self, data):
         if self.context['request'].method == 'POST':
@@ -140,15 +139,14 @@ class ReviewSerializer(serializers.ModelSerializer):
 
 class CommentSerializer(serializers.ModelSerializer):
     """Сериализатор модели Comment."""
-    review = serializers.SlugRelatedField(
+    review = ReviewSerializer(read_only=True)
+    author = serializers.SerializerMethodField(
         read_only=True,
-        slug_field='text',
+        default=serializers.CurrentUserDefault()
     )
-    author = serializers.SlugRelatedField(
-        read_only=True,
-        slug_field='username',
-        default=serializers.CurrentUserDefault(),
-    )
+
+    def get_author(self, obj):
+        return obj.author.username
 
     class Meta:
         model = Comment

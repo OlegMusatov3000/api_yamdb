@@ -8,8 +8,8 @@ from .views import (
     TitleViewSet,
     CategoryViewSet,
     GenreViewSet,
-    CommentViewSet,
-    ReviewViewSet,
+    CustomCommentViewSet,
+    CustomReviewViewSet,
 )
 
 
@@ -26,12 +26,12 @@ router.register(
 router.register('users', UserViewSet, basename='users')
 router.register(
     r'titles/(?P<title_id>\d+)/reviews',
-    ReviewViewSet,
+    CustomReviewViewSet,
     basename='reviews'
 )
 router.register(
     r'titles/(?P<title_id>\d+)/reviews/(?P<review_id>\d+)/comments',
-    CommentViewSet,
+    CustomCommentViewSet,
     basename='comments'
 )
 
