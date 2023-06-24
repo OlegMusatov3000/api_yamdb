@@ -9,7 +9,6 @@ from reviews.models import (
     Review,
 )
 
-
 BLACK_LIST_USERNAMES = ('me',)
 
 
@@ -66,25 +65,34 @@ class CategorySerializer(serializers.ModelSerializer):
 
     class Meta:
         fields = ('name', 'slug',)
-        lookup_fields = ('slug',)
         model = Category
+        queryset = Category.objects.all()
 
 
 class GenreSerializer(serializers.ModelSerializer):
+    """Сериализатор Жанров."""
+
     class Meta:
         fields = ('name', 'slug')
+        lookup_field = 'slug'
         model = Genre
+        queryset = Genre.objects.all()
+
+
+class SlugFieldWithDictRepresent(serializers.SlugRelatedField):
+    def to_representation(self, instance):
+        return {'name': instance.name, 'slug': instance.slug}
 
 
 class TitleSerializer(serializers.ModelSerializer):
     """Тайтл сериализатор."""
-    category = serializers.SlugRelatedField(
-        slug_field='slug',
-        queryset=Category.objects.all())
-    genre = serializers.SlugRelatedField(
-        slug_field='slug',
+    category = SlugFieldWithDictRepresent(
+        queryset=Category.objects.all(),
+        slug_field='slug')
+    genre = SlugFieldWithDictRepresent(
         many=True,
-        queryset=Genre.objects.all())
+        queryset=Genre.objects.all(),
+        slug_field='slug')
 
     class Meta:
         fields = '__all__'
